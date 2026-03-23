@@ -2,11 +2,9 @@
   <button class="shop__back" @click.stop="() => back()">Назад</button>
   <div class="shop">
     <h1 class="shop__title">Магазин</h1>
-    
     <div class="shop__money">
       Деньги: {{ money }}
     </div>
-    
     <div class="shop__grid">
       <div
         v-for="item in shopItems"
@@ -15,19 +13,20 @@
       >
         <div class="shop__card-info">
           {{ item.name }} - {{ item.price }}
+          <span v-if="item.type === 'groundbait'" class="shop__card-uses">
+            ({{ item.uses }} шт.)
+          </span>
+          <span v-if="item.type === 'net'" class="shop__card-uses">
+            (до {{ item.maxWeight }}г)
+          </span>
         </div>
-        
         <button
-          v-if="!hasItem(item)"
           class="shop__button"
-          @click="() => buy(item)"
+          @click="() => buyItem(item)"
+          :disabled="money < item.price"
         >
           Купить
         </button>
-        
-        <span v-else class="shop__bought">
-          Куплено
-        </span>
       </div>
     </div>
   </div>
@@ -39,37 +38,20 @@ import { items } from '@/config/items'
 
 export default {
   name: 'ShopPage',
-
   computed: {
     ...mapGetters('inventory', [
-      'money',
-      'items'
+      'money'
     ]),
-
     shopItems() {
       return items
-    },
-
-    inventoryItems() {
-      return this.items
     }
   },
-
   methods: {
     ...mapActions('inventory', [
       'buyItem'
     ]),
-
-    hasItem(item) {
-      return this.inventoryItems.some(i => i.id === item.id)
-    },
-
-    buy(item) {
-      this.buyItem(item)
-    },
-    
     back() {
-      this.$router.push({ name: this.$routes.INDEX })
+      this.$router.go(-1)
     }
   }
 }
@@ -82,7 +64,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 30px;
-
   &__back {
     position: absolute;
     top: 20px;
@@ -95,24 +76,20 @@ export default {
     cursor: pointer;
     font-weight: bold;
     border: none;
-
     &:hover {
       background: rgba(0,0,0,0.7);
     }
   }
-
   &__title {
     text-align: center;
     font-size: 28px;
     font-weight: bold;
   }
-
   &__money {
     text-align: center;
     font-size: 24px;
     font-weight: bold;
   }
-
   &__grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -120,7 +97,6 @@ export default {
     justify-items: center;
     width: 100%;
   }
-
   &__card {
     width: 100%;
     max-width: 400px;
@@ -130,8 +106,14 @@ export default {
     display: flex;
     flex-direction: column;
     gap: 15px;
+    &-info {
+      font-size: 16px;
+    }
+    &-uses {
+      font-size: 12px;
+      color: #666;
+    }
   }
-
   &__button {
     padding: 10px;
     border: 1px solid #999;
@@ -139,19 +121,13 @@ export default {
     background: white;
     cursor: pointer;
     font-size: 16px;
-
-    &:hover {
+    &:hover:not(:disabled) {
       background: #f0f0f0;
     }
-  }
-
-  &__bought {
-    padding: 10px;
-    text-align: center;
-    border: 1px solid #999;
-    border-radius: 8px;
-    background: #f5f5f5;
-    color: #666;
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
   }
 }
 </style>
